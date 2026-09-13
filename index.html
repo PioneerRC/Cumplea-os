@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proyecto</title>
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --fg:#f2f2f2;
+    --accent:#ffffff;
+    --travel: 42vw; /* distancia del recorrido hacia la izquierda */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    overflow-x:hidden;
+  }
+
+  /* ---------- SECCIÓN 1: VIDEO ---------- */
+  #intro{
+    position:relative;
+    height:100vh;
+    width:100%;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #intro video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;   /* llena la pantalla sin deformarse */
+    z-index:0;
+  }
+  /* capa oscura para que el texto se lea sobre el video */
+  #intro::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg,rgba(0,0,0,.65) 0%,rgba(0,0,0,.25) 55%,rgba(0,0,0,.15) 100%);
+    z-index:1;
+    pointer-events:none;
+  }
+
+  /* ---------- INTERACCIÓN: RECORRIDO HACIA LA IZQUIERDA ---------- */
+  .travel-wrap{
+    position:absolute;
+    z-index:2;
+    right:6vw;
+    bottom:14vh;
+    /* el recorrido: aparece a la derecha y se desplaza a la izquierda */
+    animation:travelLeft 2.6s cubic-bezier(.16,.84,.24,1) .8s both;
+  }
+  @keyframes travelLeft{
+    0%{
+      transform:translateX(var(--travel));
+      opacity:0;
+      filter:blur(6px);
+    }
+    60%{opacity:1;filter:blur(0)}
+    100%{
+      transform:translateX(0);
+      opacity:1;
+      filter:blur(0);
+    }
+  }
+
+  /* el "no-botón": zona interactiva */
+  .go{
+    display:inline-flex;
+    align-items:center;
+    gap:1rem;
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    padding:.4rem 0;
+    background:none;
+    border:none;
+    color:inherit;
+    font:inherit;
+  }
+  .go__label{
+    font-size:clamp(1.1rem,2.4vw,1.9rem);
+    font-weight:300;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    position:relative;
+    padding-bottom:.35rem;
+    white-space:nowrap;
+  }
+  /* línea que se dibuja de derecha a izquierda al pasar el cursor */
+  .go__label::after{
+    content:"";
+    position:absolute;
+    left:0;bottom:0;
+    height:1px;
+    width:100%;
+    background:var(--accent);
+    transform:scaleX(0);
+    transform-origin:right center;
+    transition:transform .6s cubic-bezier(.16,.84,.24,1);
+  }
+  .go:hover .go__label::after,
+  .go:focus-visible .go__label::after{transform:scaleX(1)}
+
+  /* flecha que se recorre a la izquierda de forma continua */
+  .go__arrow{
+    width:clamp(48px,7vw,86px);
+    height:1px;
+    background:var(--accent);
+    position:relative;
+    opacity:.75;
+    transition:opacity .4s ease, transform .6s cubic-bezier(.16,.84,.24,1);
+    animation:nudge 2.2s ease-in-out infinite;
+  }
+  .go__arrow::before{
+    content:"";
+    position:absolute;
+    left:0;top:50%;
+    width:10px;height:10px;
+    border-left:1px solid var(--accent);
+    border-bottom:1px solid var(--accent);
+    transform:translateY(-50%) rotate(45deg);
+  }
+  @keyframes nudge{
+    0%,100%{transform:translateX(0)}
+    50%{transform:translateX(-14px)}
+  }
+  .go:hover .go__arrow,
+  .go:focus-visible .go__arrow{
+    opacity:1;
+    transform:translateX(-22px);
+    animation-play-state:paused;
+  }
+  .go:focus-visible{outline:none}
+
+  @media (prefers-reduced-motion:reduce){
+    .travel-wrap{animation:none}
+    .go__arrow{animation:none}
+    html{scroll-behavior:auto}
+  }
+
+  /* ---------- SECCIÓN 2: DESTINO ---------- */
+  #sector-2{
+    min-height:100vh;
+    padding:14vh 6vw;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:1.5rem;
+    background:#0f0f0f;
+  }
+  #sector-2 h2{
+    font-size:clamp(2rem,6vw,4.5rem);
+    font-weight:200;
+    letter-spacing:.04em;
+  }
+  #sector-2 p{
+    max-width:60ch;
+    line-height:1.7;
+    opacity:.7;
+    font-weight:300;
+  }
+  .back{
+    margin-top:2rem;
+    font-size:.8rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    opacity:.5;
+    text-decoration:none;
+    color:inherit;
+    transition:opacity .3s ease;
+  }
+  .back:hover{opacity:1}
+</style>
+</head>
+<body>
+
+  <!-- ====== SECCIÓN 1 — VIDEO ====== -->
+  <section id="intro">
+    <!--
+      Sustituye la ruta por tu video dentro del repo.
+      Recomendado: carpeta /assets en la raíz del repo → assets/video.mp4
+      Usa ruta RELATIVA (no empieces con "/") para que funcione en GitHub Pages
+      cuando el sitio vive en usuario.github.io/nombre-del-repo/
+    -->
+    <video
+      src="assets/video.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="assets/poster.jpg">
+    </video>
+
+    <!-- Interacción con recorrido hacia la izquierda -->
+    <div class="travel-wrap">
+      <a class="go" href="#sector-2" aria-label="Ir a la siguiente sección">
+        <span class="go__arrow" aria-hidden="true"></span>
+        <span class="go__label">Continuar</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ====== SECCIÓN 2 — DESTINO ====== -->
+  <section id="sector-2">
+    <h2>Sector dos</h2>
+    <p>
+      Aquí va el contenido al que lleva la interacción. Esta sección es el
+      destino del desplazamiento suave; puedes reemplazar todo su interior sin
+      tocar nada de la sección del video.
+    </p>
+    <a class="back" href="#intro">volver al inicio</a>
+  </section>
+
+</body>
+</html>
