@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <title>Proyecto</title>
 <style>
   :root{
@@ -185,19 +186,18 @@
   <!-- ====== SECCIÓN 1 — VIDEO ====== -->
   <section id="intro">
     <!--
-      Sustituye la ruta por tu video dentro del repo.
-      Recomendado: carpeta /assets en la raíz del repo → assets/video.mp4
-      Usa ruta RELATIVA (no empieces con "/") para que funcione en GitHub Pages
-      cuando el sitio vive en usuario.github.io/nombre-del-repo/
+      El archivo en el repo se llama actualmente "video.mp4.mp4" (doble
+      extension). Se listan las dos rutas: el navegador usa la primera que
+      exista, asi que funciona con o sin renombrar.
     -->
     <video
-      src="assets/video.mp4"
       autoplay
       muted
       loop
       playsinline
-      preload="auto"
-      poster="assets/poster.jpg">
+      preload="auto">
+      <source src="assets/video.mp4" type="video/mp4">
+      <source src="assets/video.mp4.mp4" type="video/mp4">
     </video>
 
     <!-- Interacción con recorrido hacia la izquierda -->
