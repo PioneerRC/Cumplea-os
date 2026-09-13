@@ -10,7 +10,7 @@
     --bg:#0a0a0a;
     --fg:#f2f2f2;
     --accent:#ffffff;
-    --travel: 42vw; /* distancia del recorrido hacia la izquierda */
+    --travel: 42vw;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -21,7 +21,7 @@
     overflow-x:hidden;
   }
 
-  /* ---------- SECCIÓN 1: VIDEO ---------- */
+  /* ---------- SECCION 1: VIDEO ---------- */
   #intro{
     position:relative;
     height:100vh;
@@ -36,43 +36,77 @@
     inset:0;
     width:100%;
     height:100%;
-    object-fit:cover;   /* llena la pantalla sin deformarse */
+    object-fit:cover;
     z-index:0;
+    backface-visibility:hidden;
+    transform:translateZ(0);
   }
-  /* capa oscura para que el texto se lea sobre el video */
+  /* Sombra suave SOLO donde va el texto, para no apagar todo el video */
   #intro::after{
     content:"";
     position:absolute;
     inset:0;
-    background:linear-gradient(90deg,rgba(0,0,0,.65) 0%,rgba(0,0,0,.25) 55%,rgba(0,0,0,.15) 100%);
+    background:
+      radial-gradient(ellipse 60% 45% at 78% 82%, rgba(0,0,0,.55), transparent 70%),
+      linear-gradient(to top, rgba(0,0,0,.35) 0%, transparent 35%);
     z-index:1;
     pointer-events:none;
   }
 
-  /* ---------- INTERACCIÓN: RECORRIDO HACIA LA IZQUIERDA ---------- */
+  /* ---------- CONTROL DE SONIDO ---------- */
+  .sound{
+    position:absolute;
+    z-index:3;
+    left:6vw;
+    bottom:14vh;
+    display:inline-flex;
+    align-items:center;
+    gap:.7rem;
+    cursor:pointer;
+    background:none;
+    border:none;
+    color:var(--fg);
+    font:inherit;
+    opacity:.65;
+    transition:opacity .35s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sound:hover,.sound:focus-visible{opacity:1;outline:none}
+  .sound__icon{
+    width:34px;height:34px;
+    border:1px solid currentColor;
+    border-radius:50%;
+    display:grid;place-items:center;
+    flex:none;
+  }
+  .sound__icon svg{width:15px;height:15px;display:block}
+  .sound__text{
+    font-size:.7rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  /* pulso mientras esta silenciado, para invitar al clic */
+  .sound.is-muted .sound__icon{animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.35)}
+    50%{box-shadow:0 0 0 9px rgba(255,255,255,0)}
+  }
+
+  /* ---------- INTERACCION: RECORRIDO HACIA LA IZQUIERDA ---------- */
   .travel-wrap{
     position:absolute;
     z-index:2;
     right:6vw;
     bottom:14vh;
-    /* el recorrido: aparece a la derecha y se desplaza a la izquierda */
     animation:travelLeft 2.6s cubic-bezier(.16,.84,.24,1) .8s both;
   }
   @keyframes travelLeft{
-    0%{
-      transform:translateX(var(--travel));
-      opacity:0;
-      filter:blur(6px);
-    }
+    0%{transform:translateX(var(--travel));opacity:0;filter:blur(6px)}
     60%{opacity:1;filter:blur(0)}
-    100%{
-      transform:translateX(0);
-      opacity:1;
-      filter:blur(0);
-    }
+    100%{transform:translateX(0);opacity:1;filter:blur(0)}
   }
 
-  /* el "no-botón": zona interactiva */
   .go{
     display:inline-flex;
     align-items:center;
@@ -85,6 +119,7 @@
     border:none;
     color:inherit;
     font:inherit;
+    text-decoration:none;
   }
   .go__label{
     font-size:clamp(1.1rem,2.4vw,1.9rem);
@@ -95,7 +130,6 @@
     padding-bottom:.35rem;
     white-space:nowrap;
   }
-  /* línea que se dibuja de derecha a izquierda al pasar el cursor */
   .go__label::after{
     content:"";
     position:absolute;
@@ -110,7 +144,6 @@
   .go:hover .go__label::after,
   .go:focus-visible .go__label::after{transform:scaleX(1)}
 
-  /* flecha que se recorre a la izquierda de forma continua */
   .go__arrow{
     width:clamp(48px,7vw,86px);
     height:1px;
@@ -144,10 +177,17 @@
   @media (prefers-reduced-motion:reduce){
     .travel-wrap{animation:none}
     .go__arrow{animation:none}
+    .sound.is-muted .sound__icon{animation:none}
     html{scroll-behavior:auto}
   }
 
-  /* ---------- SECCIÓN 2: DESTINO ---------- */
+  /* En pantallas angostas, el control de sonido sube para no chocar */
+  @media (max-width:620px){
+    .sound{bottom:24vh}
+    .sound__text{display:none}
+  }
+
+  /* ---------- SECCION 2: DESTINO ---------- */
   #sector-2{
     min-height:100vh;
     padding:14vh 6vw;
@@ -183,42 +223,119 @@
 </head>
 <body>
 
-  <!-- ====== SECCIÓN 1 — VIDEO ====== -->
+  <!-- ====== SECCION 1 - VIDEO ====== -->
   <section id="intro">
-    <!--
-      El archivo en el repo se llama actualmente "video.mp4.mp4" (doble
-      extension). Se listan las dos rutas: el navegador usa la primera que
-      exista, asi que funciona con o sin renombrar.
-    -->
-    <video
+    <video id="bgVideo"
+      src="assets/video.mp4"
       autoplay
       muted
       loop
       playsinline
       preload="auto">
-      <source src="assets/video.mp4" type="video/mp4">
-      <source src="assets/video.mp4.mp4" type="video/mp4">
     </video>
 
-    <!-- Interacción con recorrido hacia la izquierda -->
+    <!-- Control de sonido -->
+    <button class="sound is-muted" id="soundBtn" type="button" aria-label="Activar sonido">
+      <span class="sound__icon" aria-hidden="true">
+        <svg id="iconMuted" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 5 6 9H2v6h4l5 4z"/>
+          <line x1="23" y1="9" x2="17" y2="15"/>
+          <line x1="17" y1="9" x2="23" y2="15"/>
+        </svg>
+        <svg id="iconOn" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" hidden>
+          <path d="M11 5 6 9H2v6h4l5 4z"/>
+          <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+          <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+        </svg>
+      </span>
+      <span class="sound__text" id="soundText">Activar sonido</span>
+    </button>
+
+    <!-- Interaccion con recorrido hacia la izquierda -->
     <div class="travel-wrap">
-      <a class="go" href="#sector-2" aria-label="Ir a la siguiente sección">
+      <a class="go" href="#sector-2" aria-label="Ir a la siguiente seccion">
         <span class="go__arrow" aria-hidden="true"></span>
         <span class="go__label">Continuar</span>
       </a>
     </div>
   </section>
 
-  <!-- ====== SECCIÓN 2 — DESTINO ====== -->
+  <!-- ====== SECCION 2 - DESTINO ====== -->
   <section id="sector-2">
     <h2>Sector dos</h2>
     <p>
-      Aquí va el contenido al que lleva la interacción. Esta sección es el
+      Aqui va el contenido al que lleva la interaccion. Esta seccion es el
       destino del desplazamiento suave; puedes reemplazar todo su interior sin
-      tocar nada de la sección del video.
+      tocar nada de la seccion del video.
     </p>
     <a class="back" href="#intro">volver al inicio</a>
   </section>
+
+<script>
+(function(){
+  var v     = document.getElementById('bgVideo');
+  var btn   = document.getElementById('soundBtn');
+  var icOff = document.getElementById('iconMuted');
+  var icOn  = document.getElementById('iconOn');
+  var label = document.getElementById('soundText');
+  if(!v) return;
+
+  v.addEventListener('error', function(){
+    console.error('[video] no se pudo cargar:', v.currentSrc || v.src);
+  });
+
+  /* El navegador SOLO permite arrancar solo si esta silenciado.
+     Arrancamos mudo y activamos el audio en la primera interaccion. */
+  function play(){
+    var p = v.play();
+    if(p && p.catch) p.catch(function(e){
+      console.warn('[video] autoplay bloqueado:', e.name);
+    });
+  }
+
+  function render(){
+    var muted = v.muted;
+    btn.classList.toggle('is-muted', muted);
+    icOff.hidden = !muted;
+    icOn.hidden  = muted;
+    label.textContent = muted ? 'Activar sonido' : 'Silenciar';
+    btn.setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar');
+  }
+
+  function unmute(){
+    v.muted = false;
+    v.volume = 1;
+    play();
+    render();
+  }
+
+  /* Boton: alterna el sonido */
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    v.muted = !v.muted;
+    if(!v.muted) v.volume = 1;
+    play();
+    render();
+  });
+
+  /* Primera interaccion en cualquier parte: activa el sonido */
+  function firstTouch(e){
+    if(btn.contains(e.target)) return;
+    unmute();
+    document.removeEventListener('click', firstTouch);
+    document.removeEventListener('touchstart', firstTouch);
+    document.removeEventListener('keydown', firstTouch);
+  }
+  document.addEventListener('click', firstTouch);
+  document.addEventListener('touchstart', firstTouch);
+  document.addEventListener('keydown', firstTouch);
+
+  play();
+  render();
+})();
+</script>
 
 </body>
 </html>
