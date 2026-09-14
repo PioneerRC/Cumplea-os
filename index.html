@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <title>Proyecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0a0a;
@@ -211,6 +214,7 @@
   /* ---------- SECCION 2: AHORCADO ---------- */
   #sector-2{
     position:relative;
+    z-index:0;
     padding:10vh 6vw;
     display:flex;
     flex-direction:column;
@@ -234,16 +238,16 @@
     object-fit:cover;
     display:block;
     background:#161616;
-    filter:saturate(calc(.5 + var(--reveal,0) * .5)) brightness(calc(.75 + var(--reveal,0) * .35));
+    filter:saturate(calc(.15 + var(--reveal,0) * .85)) brightness(calc(.35 + var(--reveal,0) * .75));
     transition:filter .6s ease;
   }
-  /* Velo oscuro que se aclara a medida que aciertas letras */
+  /* Velo oscuro que se aclara a medida que aciertas letras: casi opaco al inicio */
   .scene-bg::after{
     content:"";
     position:absolute;
     inset:0;
-    background:linear-gradient(180deg, rgba(10,10,10,.55), rgba(10,10,10,.8));
-    opacity:calc(1 - var(--reveal,0) * .82);
+    background:#0a0a0a;
+    opacity:calc(.97 - var(--reveal,0) * .82);
     transition:opacity .6s ease;
   }
 
@@ -256,7 +260,7 @@
     height:100%;
     transform:translateX(-50%);
     pointer-events:none;
-    opacity:calc(.1 + var(--reveal,0) * .9);
+    opacity:calc(.04 + var(--reveal,0) * .96);
     transition:opacity .6s ease;
   }
   .scene-seam svg{width:100%;height:100%;display:block}
@@ -427,26 +431,127 @@
     .key{width:2rem;height:2rem;font-size:.75rem}
   }
 
-  /* ---------- SECCION 3 ---------- */
+  /* ---------- SECCION 3: TARJETA RASCABLE ---------- */
   #sector-3{
-    padding:14vh 6vw;
+    position:relative;
+    z-index:0;
+    padding:10vh 6vw;
     display:flex;
     flex-direction:column;
+    align-items:center;
     justify-content:center;
-    gap:1.5rem;
+    text-align:center;
+    gap:1.6rem;
     background:#0a0a0a;
   }
-  #sector-3 h2{
-    font-size:clamp(2rem,6vw,4.5rem);
-    font-weight:200;
-    letter-spacing:.04em;
-  }
-  #sector-3 p{
-    max-width:60ch;
-    line-height:1.7;
-    opacity:.7;
+  #sector-3 .intro-label{
+    font-size:.75rem;
+    letter-spacing:.35em;
+    text-transform:uppercase;
+    opacity:.55;
     font-weight:300;
   }
+
+  /* Fondo en video */
+  .scene-video{
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    overflow:hidden;
+  }
+  .scene-video video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    background:#161616;
+  }
+  .scene-video::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(10,10,10,.55), rgba(10,10,10,.78));
+  }
+
+  .scratch{
+    position:relative;
+    width:min(90vw,460px);
+    height:min(74vh,580px);
+    -webkit-user-select:none;
+    user-select:none;
+    touch-action:none;
+  }
+
+  /* Capa revelada: el recuadro de texto con bordes ondulados */
+  .scratch__content{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(1.4rem,7%,2.4rem);
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,77,109,.18), transparent 55%),
+      linear-gradient(160deg, #241016, #150a0d 60%, #1c0f12);
+    box-shadow:inset 0 0 60px rgba(0,0,0,.45);
+  }
+  .scratch__message{
+    font-family:'Dancing Script', cursive;
+    font-weight:600;
+    font-size:clamp(1rem,2.6vw,1.4rem);
+    line-height:1.65;
+    color:#f7e9dd;
+    text-shadow:0 0 20px rgba(255,140,160,.3);
+    max-height:100%;
+    overflow-y:auto;
+    padding-right:.5rem;
+  }
+  .scratch__message::-webkit-scrollbar{width:4px}
+  .scratch__message::-webkit-scrollbar-track{background:transparent}
+  .scratch__message::-webkit-scrollbar-thumb{background:rgba(232,199,140,.4);border-radius:4px}
+
+  /* Capa rascable */
+  .scratch__canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:1;
+    cursor:pointer;
+    touch-action:none;
+    transition:opacity .7s ease;
+  }
+  .scratch__canvas.is-cleared{
+    opacity:0;
+    pointer-events:none;
+  }
+
+  /* Contorno ondulado decorativo, siempre visible */
+  .scratch__outline{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:2;
+    pointer-events:none;
+    overflow:visible;
+  }
+  .scratch__outline path{
+    fill:none;
+    stroke:rgba(232,199,140,.85);
+    stroke-width:1.6;
+    filter:drop-shadow(0 0 6px rgba(232,199,140,.45));
+  }
+
+  .scratch__caption{
+    font-size:.75rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    opacity:.45;
+    font-weight:300;
+    transition:opacity .5s ease;
+  }
+  .scratch__caption[hidden]{display:none}
 
   /* ---------- CORAZON: OVERLAY Y RUPTURA ---------- */
   .heart-overlay{
@@ -600,11 +705,11 @@
     <div class="scene-bg" aria-hidden="true">
 
       <!-- ============ PARTE 1: FOTO IZQUIERDA ============ -->
-      <!-- Cambia el "src" por la ruta de tu primera foto, ej: assets/foto1.jpg -->
+      <!-- Cambia el "src" por la ruta de tu primera foto, ej: assets/foto1.jpeg -->
       <img class="scene-bg__photo" src="assets/foto1.jpeg" alt="" onerror="this.style.opacity=0">
 
       <!-- ============ PARTE 2: FOTO DERECHA ============ -->
-      <!-- Cambia el "src" por la ruta de tu segunda foto, ej: assets/foto2.jpg -->
+      <!-- Cambia el "src" por la ruta de tu segunda foto, ej: assets/foto2.jpeg -->
       <img class="scene-bg__photo" src="assets/foto2.jpeg" alt="" onerror="this.style.opacity=0">
 
       <!-- Grieta que une las dos fotos: se ilumina con cada acierto -->
@@ -655,13 +760,37 @@
     </defs>
   </svg>
 
-  <!-- ====== SECCION 3 ====== -->
+  <!-- ====== SECCION 3 - TARJETA RASCABLE ====== -->
   <section id="sector-3">
-    <h2>Sector tres</h2>
-    <p>
-      Aqui va el contenido siguiente. Esta seccion es el destino al que llega
-      la interaccion del corazon.
-    </p>
+
+    <!-- Fondo en video -->
+    <div class="scene-video" aria-hidden="true">
+      <!-- ============ FONDO EN VIDEO ============ -->
+      <!-- Cambia el "src" por la ruta de tu video, ej: assets/video-sector3.mp4 -->
+      <video src="assets/video-sector3.mp4" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+
+    <span class="intro-label">Rasca con el dedo o el mouse</span>
+
+    <div class="scratch" id="scratchCard">
+      <!-- Capa revelada -->
+      <div class="scratch__content">
+        <!-- ============ TEXTO DEL MENSAJE ============ -->
+        <!-- Cambia el texto de abajo por tu mensaje -->
+        <p class="scratch__message">Desde el día que te conocí quede completamente enamorado de tu forma de ser, tu forma de amar, y tu forma de escuchar. Todos los días que escucho tu voz, o siento tu calor a mi lado me hacen agradecer la decision que tome el día que te quise como mi novia. Te agradezco todas las experiencias juntos que hemos tenido, y que ojala un día como hoy se repita mil y una veces, con nosotros juntos y amandonos.</p>
+      </div>
+
+      <!-- Contorno ondulado (se dibuja por JS, mismo borde en ambas capas) -->
+      <svg class="scratch__outline" id="scratchOutline">
+        <path id="scratchOutlinePath" d=""/>
+      </svg>
+
+      <!-- Capa rascable -->
+      <canvas class="scratch__canvas" id="scratchCanvas" aria-hidden="true"></canvas>
+    </div>
+
+    <span class="scratch__caption" id="scratchCaption">rasca la superficie para descubrir el mensaje</span>
+
     <a class="back" href="#intro">volver al inicio</a>
   </section>
 
@@ -1016,6 +1145,175 @@
       clickBtn.classList.remove('is-popping');
       shatter();
     }, 110);
+  });
+})();
+
+/* ---------- TARJETA RASCABLE (SECCION 3) ---------- */
+(function(){
+  var card    = document.getElementById('scratchCard');
+  var canvas  = document.getElementById('scratchCanvas');
+  var outline = document.getElementById('scratchOutlinePath');
+  var caption = document.getElementById('scratchCaption');
+  if(!card || !canvas || !outline) return;
+
+  var AMP  = 9;      // profundidad de la onda del borde
+  var WAVELENGTH = 34; // largo aproximado de cada onda
+  var REVEAL_THRESHOLD = 0.55;
+
+  var ctx = canvas.getContext('2d');
+  var w = 0, h = 0, dpr = 1;
+  var scratching = false;
+  var lastX = 0, lastY = 0;
+  var cleared = false;
+  var lastCheck = 0;
+
+  /* Construye un rectangulo con los 4 bordes ondulados, como cadena de path SVG */
+  function wavyRectPath(width, height, amp, wavelength){
+    var pts = [];
+    function addEdge(x0, y0, x1, y1, axis){
+      var length = axis === 'x' ? Math.abs(x1 - x0) : Math.abs(y1 - y0);
+      var count  = Math.max(2, Math.round(length / wavelength));
+      var dir    = axis === 'x' ? (x1 > x0 ? 1 : -1) : (y1 > y0 ? 1 : -1);
+      var samplesPerWave = 8;
+      var totalSamples = count * samplesPerWave;
+      for(var i = 0; i <= totalSamples; i++){
+        var t = i / totalSamples;
+        var offset = Math.sin(t * count * Math.PI * 2) * amp;
+        if(axis === 'x'){
+          pts.push([x0 + dir * t * length, y0 + offset]);
+        } else {
+          pts.push([x0 + offset, y0 + dir * t * length]);
+        }
+      }
+    }
+    addEdge(amp, amp, width - amp, amp, 'x');
+    addEdge(width - amp, amp, width - amp, height - amp, 'y');
+    addEdge(width - amp, height - amp, amp, height - amp, 'x');
+    addEdge(amp, height - amp, amp, amp, 'y');
+
+    var d = 'M ' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+    for(var i = 1; i < pts.length; i++){
+      d += ' L ' + pts[i][0].toFixed(1) + ' ' + pts[i][1].toFixed(1);
+    }
+    return d + ' Z';
+  }
+
+  function paintSurface(){
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#3c3c3c');
+    grad.addColorStop(.5, '#1b1b1b');
+    grad.addColorStop(1, '#3c3c3c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    for(var i = 0; i < 150; i++){
+      ctx.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.06) + ')';
+      ctx.beginPath();
+      ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = 'rgba(245,230,220,.8)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '600 ' + Math.max(13, Math.round(w * 0.065)) + 'px "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('R A S C A   A Q U I', w / 2, h / 2);
+  }
+
+  function setup(){
+    var rect = card.getBoundingClientRect();
+    w = rect.width;
+    h = rect.height;
+    dpr = window.devicePixelRatio || 1;
+    canvas.width  = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width  = w + 'px';
+    canvas.style.height = h + 'px';
+
+    var path = wavyRectPath(w, h, AMP, WAVELENGTH);
+    canvas.style.clipPath = 'path("' + path + '")';
+    card.querySelector('.scratch__content').style.clipPath = 'path("' + path + '")';
+    outline.setAttribute('d', path);
+
+    cleared = false;
+    canvas.classList.remove('is-cleared');
+    if(caption) caption.hidden = false;
+    paintSurface();
+  }
+
+  function pointFromEvent(e){
+    var rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function erase(x0, y0, x1, y1){
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 46;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x1, y1, 23, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function checkRevealProgress(now){
+    if(cleared) return;
+    if(now - lastCheck < 220) return;
+    lastCheck = now;
+    var data;
+    try{
+      data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    } catch(e){ return; }
+    var total = 0, clearCount = 0;
+    for(var i = 3; i < data.length; i += 4 * 37){
+      total++;
+      if(data[i] < 80) clearCount++;
+    }
+    if(total && clearCount / total >= REVEAL_THRESHOLD){
+      cleared = true;
+      canvas.classList.add('is-cleared');
+      if(caption) caption.hidden = true;
+    }
+  }
+
+  function startScratch(e){
+    scratching = true;
+    var p = pointFromEvent(e);
+    lastX = p.x; lastY = p.y;
+    erase(p.x, p.y, p.x + 0.01, p.y + 0.01);
+  }
+  function moveScratch(e){
+    if(!scratching || cleared) return;
+    var p = pointFromEvent(e);
+    erase(lastX, lastY, p.x, p.y);
+    lastX = p.x; lastY = p.y;
+    checkRevealProgress(performance.now());
+  }
+  function endScratch(){
+    scratching = false;
+  }
+
+  canvas.addEventListener('pointerdown', function(e){
+    canvas.setPointerCapture(e.pointerId);
+    startScratch(e);
+  });
+  canvas.addEventListener('pointermove', moveScratch);
+  canvas.addEventListener('pointerup', endScratch);
+  canvas.addEventListener('pointercancel', endScratch);
+  canvas.addEventListener('pointerleave', endScratch);
+
+  setup();
+
+  var resizeTimer;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(setup, 250);
   });
 })();
 </script>
