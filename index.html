@@ -13,12 +13,28 @@
     --travel: 42vw;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  html,body{
+    height:100%;
+    overflow:hidden;
+  }
   body{
     background:var(--bg);
     color:var(--fg);
     font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
-    overflow-x:hidden;
+  }
+
+  /* ---------- CONTROL DE ESCENAS (sin scroll libre) ---------- */
+  #scenes{
+    position:relative;
+    width:100%;
+    height:100vh;
+    transition:transform .9s cubic-bezier(.65,0,.35,1);
+    will-change:transform;
+  }
+  #scenes > section{
+    width:100%;
+    height:100vh;
+    overflow-y:auto;
   }
 
   /* ---------- SECCION 1: VIDEO ---------- */
@@ -99,7 +115,12 @@
     z-index:2;
     right:6vw;
     bottom:14vh;
-    animation:travelLeft 2.6s cubic-bezier(.16,.84,.24,1) .8s both;
+    opacity:0;
+    pointer-events:none;
+  }
+  .travel-wrap.is-visible{
+    pointer-events:auto;
+    animation:travelLeft 2.6s cubic-bezier(.16,.84,.24,1) both;
   }
   @keyframes travelLeft{
     0%{transform:translateX(var(--travel));opacity:0;filter:blur(6px)}
@@ -187,15 +208,67 @@
     .sound__text{display:none}
   }
 
-  /* ---------- SECCION 2: DESTINO ---------- */
+  /* ---------- SECCION 2: AHORCADO ---------- */
   #sector-2{
-    min-height:100vh;
-    padding:14vh 6vw;
+    position:relative;
+    padding:10vh 6vw;
     display:flex;
     flex-direction:column;
+    align-items:center;
     justify-content:center;
+    text-align:center;
     gap:1.5rem;
     background:#0f0f0f;
+  }
+
+  /* Fondo partido en dos mitades (foto izquierda / foto derecha) */
+  .scene-bg{
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    display:flex;
+  }
+  .scene-bg__photo{
+    width:50%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    background:#161616;
+    filter:saturate(calc(.5 + var(--reveal,0) * .5)) brightness(calc(.75 + var(--reveal,0) * .35));
+    transition:filter .6s ease;
+  }
+  /* Velo oscuro que se aclara a medida que aciertas letras */
+  .scene-bg::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(10,10,10,.55), rgba(10,10,10,.8));
+    opacity:calc(1 - var(--reveal,0) * .82);
+    transition:opacity .6s ease;
+  }
+
+  /* Grieta luminosa que une las dos fotos, crece con cada acierto */
+  .scene-seam{
+    position:absolute;
+    top:0;
+    left:50%;
+    width:26px;
+    height:100%;
+    transform:translateX(-50%);
+    pointer-events:none;
+    opacity:calc(.1 + var(--reveal,0) * .9);
+    transition:opacity .6s ease;
+  }
+  .scene-seam svg{width:100%;height:100%;display:block}
+  .scene-seam path{
+    fill:none;
+    stroke:#fff;
+    stroke-width:1.6;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    filter:
+      drop-shadow(0 0 6px rgba(255,255,255,.9))
+      drop-shadow(0 0 18px rgba(255,77,109,.65));
   }
   #sector-2 h2{
     font-size:clamp(2rem,6vw,4.5rem);
@@ -219,9 +292,267 @@
     transition:opacity .3s ease;
   }
   .back:hover{opacity:1}
+
+  /* ---------- AHORCADO ---------- */
+  .hangman{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2.2rem;
+    margin-top:.5rem;
+    padding:clamp(2rem,4vw,3.5rem) clamp(1.6rem,5vw,4rem);
+    border-radius:24px;
+    background:linear-gradient(180deg, rgba(255,255,255,calc(.045 - var(--reveal,0) * .03)), rgba(255,255,255,calc(.015 - var(--reveal,0) * .012)));
+    border:1px solid rgba(255,255,255,calc(.09 - var(--reveal,0) * .04));
+    box-shadow:0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+    backdrop-filter:blur(calc(8px - var(--reveal,0) * 6px));
+    transition:background .6s ease, border-color .6s ease, backdrop-filter .6s ease;
+  }
+  .hangman__gallows{
+    width:150px;
+    height:180px;
+    flex:none;
+    stroke:var(--fg);
+    stroke-width:1.6;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    fill:none;
+    opacity:.85;
+  }
+  .hangman__gallows .hm-part{
+    opacity:0;
+    stroke:#ff4d6d;
+    filter:drop-shadow(0 0 6px rgba(255,77,109,.65));
+    transform-origin:80px 42px;
+    transform:scale(.6);
+    transition:opacity .35s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .hangman__gallows .hm-part.show{opacity:1;transform:scale(1)}
+  .hangman__gallows .hm-part.hm-head{fill:none}
+
+  .hangman__board{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1.8rem;
+    min-width:260px;
+  }
+  .hangman__word{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:.6rem .9rem;
+  }
+  .hangman__letter{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:1.1em;
+    font-size:clamp(1.6rem,4vw,2.6rem);
+    font-weight:300;
+    letter-spacing:.05em;
+    border-bottom:2px solid rgba(242,242,242,.35);
+    padding-bottom:.15rem;
+    text-transform:uppercase;
+    text-shadow:0 0 24px rgba(255,255,255,.15);
+  }
+  .hangman__letter.is-space{border-bottom:none;min-width:.6em}
+
+  .hangman__keyboard{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:.5rem;
+    max-width:540px;
+  }
+  .key{
+    width:2.3rem;
+    height:2.3rem;
+    display:grid;
+    place-items:center;
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.15);
+    color:var(--fg);
+    font:inherit;
+    font-size:.85rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    cursor:pointer;
+    border-radius:8px;
+    transition:opacity .3s ease, border-color .3s ease, background .3s ease, transform .2s ease, color .3s ease;
+  }
+  .key:hover:not(:disabled){border-color:var(--fg);transform:translateY(-2px)}
+  .key:disabled{cursor:default}
+  .key.is-correct{
+    border-color:rgba(255,255,255,.5);
+    background:rgba(255,255,255,.1);
+    color:#fff;
+    opacity:.9;
+  }
+  .key.is-wrong{
+    border-color:rgba(255,77,109,.5);
+    color:#ff4d6d;
+    opacity:.45;
+    text-decoration:line-through;
+  }
+
+  .hangman__message{
+    font-size:.85rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    opacity:.75;
+    min-height:1.4em;
+  }
+  .hangman__retry{
+    margin-top:.2rem;
+    font-size:.75rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    opacity:.6;
+    background:none;
+    border:none;
+    color:inherit;
+    font-family:inherit;
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+    transition:opacity .3s ease;
+  }
+  .hangman__retry:hover{opacity:1}
+  .hangman__retry[hidden]{display:none}
+
+  @media (max-width:620px){
+    .hangman{gap:1.6rem}
+    .hangman__gallows{width:110px;height:135px}
+    .key{width:2rem;height:2rem;font-size:.75rem}
+  }
+
+  /* ---------- SECCION 3 ---------- */
+  #sector-3{
+    padding:14vh 6vw;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:1.5rem;
+    background:#0a0a0a;
+  }
+  #sector-3 h2{
+    font-size:clamp(2rem,6vw,4.5rem);
+    font-weight:200;
+    letter-spacing:.04em;
+  }
+  #sector-3 p{
+    max-width:60ch;
+    line-height:1.7;
+    opacity:.7;
+    font-weight:300;
+  }
+
+  /* ---------- CORAZON: OVERLAY Y RUPTURA ---------- */
+  .heart-overlay{
+    position:fixed;
+    inset:0;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.82);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .6s ease;
+  }
+  .heart-overlay.is-active{opacity:1;pointer-events:auto}
+
+  .heart-stage{
+    position:relative;
+    width:clamp(220px,58vw,400px);
+    height:clamp(220px,58vw,400px);
+  }
+  .heart-stage::before{
+    content:"";
+    position:absolute;
+    inset:-25%;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,45,85,.45) 0%, rgba(255,45,85,.15) 45%, transparent 72%);
+    filter:blur(6px);
+    animation:heartGlow 1.8s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes heartGlow{
+    0%,100%{opacity:.6;transform:scale(1)}
+    50%{opacity:1;transform:scale(1.12)}
+  }
+
+  .heart-click{
+    position:absolute;
+    inset:0;
+    z-index:1;
+    cursor:pointer;
+    background:none;
+    border:none;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    animation:heartPulse 1.6s ease-in-out infinite;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1);
+  }
+  .heart-click.is-popping{animation:none;transform:scale(1.18)}
+  @keyframes heartPulse{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.08)}
+  }
+  .heart-svg{
+    width:100%;height:100%;display:block;overflow:visible;
+    filter:
+      drop-shadow(0 0 26px rgba(255,45,85,.8))
+      drop-shadow(0 0 60px rgba(255,45,85,.45));
+  }
+
+  .heart-flash{
+    position:absolute;
+    inset:-45%;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,95,126,.6) 35%, rgba(255,95,126,0) 70%);
+    opacity:0;
+    transform:scale(.3);
+    pointer-events:none;
+    z-index:2;
+  }
+  .heart-flash.burst{animation:heartFlash .55s ease-out forwards}
+  @keyframes heartFlash{
+    0%{opacity:0;transform:scale(.3)}
+    30%{opacity:1;transform:scale(1.1)}
+    100%{opacity:0;transform:scale(1.9)}
+  }
+
+  .heart-overlay.is-shaking{animation:heartShake .4s ease}
+  @keyframes heartShake{
+    0%,100%{transform:translate(0,0)}
+    20%{transform:translate(-7px,5px)}
+    40%{transform:translate(6px,-6px)}
+    60%{transform:translate(-5px,4px)}
+    80%{transform:translate(4px,-3px)}
+  }
+
+  .heart-shatter{position:absolute;inset:0;z-index:1}
+  .heart-shatter__tile{
+    position:absolute;
+    overflow:hidden;
+    will-change:transform,opacity,filter;
+    transition:transform 1.2s cubic-bezier(.17,.84,.44,1), opacity 1.2s ease, filter 1.2s ease;
+  }
+  .heart-shatter__inner{position:absolute}
+  .heart-shatter__inner .heart-svg{
+    filter:
+      drop-shadow(0 0 26px rgba(255,45,85,.8))
+      drop-shadow(0 0 60px rgba(255,45,85,.45));
+  }
 </style>
 </head>
 <body>
+
+  <div id="scenes">
 
   <!-- ====== SECCION 1 - VIDEO ====== -->
   <section id="intro">
@@ -262,25 +593,142 @@
     </div>
   </section>
 
-  <!-- ====== SECCION 2 - DESTINO ====== -->
+  <!-- ====== SECCION 2 - AHORCADO ====== -->
   <section id="sector-2">
-    <h2>Sector dos</h2>
+
+    <!-- Fondo de la escena: dividido en dos mitades -->
+    <div class="scene-bg" aria-hidden="true">
+
+      <!-- ============ PARTE 1: FOTO IZQUIERDA ============ -->
+      <!-- Cambia el "src" por la ruta de tu primera foto, ej: assets/foto1.jpg -->
+      <img class="scene-bg__photo" src="assets/foto1.jpg" alt="" onerror="this.style.opacity=0">
+
+      <!-- ============ PARTE 2: FOTO DERECHA ============ -->
+      <!-- Cambia el "src" por la ruta de tu segunda foto, ej: assets/foto2.jpg -->
+      <img class="scene-bg__photo" src="assets/foto2.jpg" alt="" onerror="this.style.opacity=0">
+
+      <!-- Grieta que une las dos fotos: se ilumina con cada acierto -->
+      <div class="scene-seam" aria-hidden="true">
+        <svg viewBox="0 0 10 100" preserveAspectRatio="none">
+          <path d="M5,0 L2,6 L8,12 L1,20 L9,28 L2,36 L8,44 L1,52 L9,60 L3,68 L8,76 L2,84 L7,92 L5,100"/>
+        </svg>
+      </div>
+
+    </div>
+
+    <h2>Adivina la palabra</h2>
+    <p>Un pequeno juego antes de seguir. Elige letras y descubre que dice.</p>
+
+    <div class="hangman">
+      <svg class="hangman__gallows" viewBox="0 0 120 150" aria-hidden="true">
+        <line x1="10" y1="140" x2="90" y2="140"/>
+        <line x1="30" y1="140" x2="30" y2="10"/>
+        <line x1="30" y1="10" x2="80" y2="10"/>
+        <line x1="80" y1="10" x2="80" y2="30"/>
+        <circle class="hm-part hm-head" data-part="0" cx="80" cy="42" r="12"/>
+        <line class="hm-part" data-part="1" x1="80" y1="54" x2="80" y2="90"/>
+        <line class="hm-part" data-part="2" x1="80" y1="65" x2="65" y2="80"/>
+        <line class="hm-part" data-part="3" x1="80" y1="65" x2="95" y2="80"/>
+        <line class="hm-part" data-part="4" x1="80" y1="90" x2="68" y2="110"/>
+        <line class="hm-part" data-part="5" x1="80" y1="90" x2="92" y2="110"/>
+      </svg>
+
+      <div class="hangman__board">
+        <div class="hangman__word" id="hmWord"></div>
+        <div class="hangman__keyboard" id="hmKeyboard"></div>
+        <div class="hangman__message" id="hmMessage" role="status" aria-live="polite"></div>
+        <button class="hangman__retry" id="hmRetry" type="button" hidden>Intentar de nuevo</button>
+      </div>
+    </div>
+
+    <a class="back" href="#intro">volver al inicio</a>
+  </section>
+
+  <!-- Definicion compartida del degradado del corazon -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="heartFill" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffb3c1"/>
+        <stop offset="45%" stop-color="#ff2d55"/>
+        <stop offset="100%" stop-color="#b0003a"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- ====== SECCION 3 ====== -->
+  <section id="sector-3">
+    <h2>Sector tres</h2>
     <p>
-      Aqui va el contenido al que lleva la interaccion. Esta seccion es el
-      destino del desplazamiento suave; puedes reemplazar todo su interior sin
-      tocar nada de la seccion del video.
+      Aqui va el contenido siguiente. Esta seccion es el destino al que llega
+      la interaccion del corazon.
     </p>
     <a class="back" href="#intro">volver al inicio</a>
   </section>
 
+  </div> <!-- /#scenes -->
+
+  <!-- Overlay: corazon que se rompe al hacer click (fuera de #scenes: el transform del carrusel rompe position:fixed) -->
+  <div class="heart-overlay" id="heartOverlay" aria-hidden="true">
+    <div class="heart-stage" id="heartStage">
+      <button class="heart-click" id="heartClickBtn" type="button" aria-label="Toca el corazon para continuar">
+        <svg class="heart-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path fill="url(#heartFill)" d="M12,21.35l-1.45-1.32C5.4,15.36,2,12.28,2,8.5C2,5.42,4.42,3,7.5,3c1.74,0,3.41,0.81,4.5,2.09C13.09,3.81,14.76,3,16.5,3C19.58,3,22,5.42,22,8.5c0,3.78-3.4,6.86-8.55,11.54L12,21.35z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
 <script>
+/* ---------- CONTROLADOR DE ESCENAS: sin scroll libre ---------- */
+(function(){
+  var scenes = document.getElementById('scenes');
+  var ORDER  = ['intro', 'sector-2', 'sector-3'];
+  var current = 0;
+
+  function goTo(index){
+    if(index < 0 || index >= ORDER.length) return;
+    current = index;
+    scenes.style.transform = 'translateY(-' + (index * 100) + 'vh)';
+  }
+
+  /* Enlaces "volver al inicio": siempre permitido retroceder */
+  Array.prototype.forEach.call(document.querySelectorAll('a.back[href="#intro"]'), function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      goTo(0);
+    });
+  });
+
+  window.__goToScene = goTo;
+})();
+
 (function(){
   var v     = document.getElementById('bgVideo');
   var btn   = document.getElementById('soundBtn');
   var icOff = document.getElementById('iconMuted');
   var icOn  = document.getElementById('iconOn');
   var label = document.getElementById('soundText');
+  var travel = document.querySelector('.travel-wrap');
   if(!v) return;
+
+  /* Muestra el boton "Continuar" solo cuando faltan 5s o menos para que termine el video */
+  if(travel){
+    var shown = false;
+    v.addEventListener('timeupdate', function(){
+      if(shown || !v.duration) return;
+      if(v.duration - v.currentTime <= 5){
+        shown = true;
+        travel.classList.add('is-visible');
+      }
+    });
+    var goBtn = travel.querySelector('.go');
+    if(goBtn){
+      goBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        if(shown && window.__goToScene) window.__goToScene(1);
+      });
+    }
+  }
 
   v.addEventListener('error', function(){
     console.error('[video] no se pudo cargar:', v.currentSrc || v.src);
@@ -334,6 +782,241 @@
 
   play();
   render();
+})();
+
+/* ---------- AHORCADO: LU SEAL ---------- */
+(function(){
+  var WORD    = 'LUNA SEAL';
+  var MAX_WRONG = 6;
+  var LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  var wordEl    = document.getElementById('hmWord');
+  var keysEl    = document.getElementById('hmKeyboard');
+  var msgEl     = document.getElementById('hmMessage');
+  var retryBtn  = document.getElementById('hmRetry');
+  var parts     = document.querySelectorAll('.hangman__gallows .hm-part');
+  var sector2   = document.getElementById('sector-2');
+  if(!wordEl || !keysEl) return;
+
+  /* letras unicas de la palabra: cuantas mas aciertes, mas se revela el fondo */
+  var UNIQUE_LETTERS = (function(){
+    var seen = {}, list = [];
+    WORD.split('').forEach(function(ch){
+      if(ch !== ' ' && !seen[ch]){ seen[ch] = true; list.push(ch); }
+    });
+    return list;
+  })();
+
+  var guessed, wrong, over;
+
+  function updateReveal(){
+    if(!sector2) return;
+    var count = Object.keys(guessed).length;
+    var progress = UNIQUE_LETTERS.length ? count / UNIQUE_LETTERS.length : 0;
+    sector2.style.setProperty('--reveal', progress);
+  }
+
+  function renderWord(){
+    wordEl.innerHTML = '';
+    WORD.split('').forEach(function(ch){
+      var span = document.createElement('span');
+      if(ch === ' '){
+        span.className = 'hangman__letter is-space';
+      } else {
+        span.className = 'hangman__letter';
+        span.textContent = guessed[ch] || over ? ch : '';
+      }
+      wordEl.appendChild(span);
+    });
+  }
+
+  function renderGallows(){
+    parts.forEach(function(p){
+      var i = Number(p.getAttribute('data-part'));
+      p.classList.toggle('show', i < wrong);
+    });
+  }
+
+  function isWon(){
+    return WORD.split('').every(function(ch){
+      return ch === ' ' || guessed[ch];
+    });
+  }
+
+  function setMessage(text){
+    msgEl.textContent = text;
+  }
+
+  function endGame(won){
+    over = true;
+    renderWord();
+    Array.prototype.forEach.call(keysEl.querySelectorAll('.key'), function(k){
+      k.disabled = true;
+    });
+    retryBtn.hidden = false;
+    setMessage(won ? 'Lo lograste.' : 'Sin intentos. La palabra era ' + WORD + '.');
+    if(won && window.revealHeart) setTimeout(window.revealHeart, 700);
+  }
+
+  function guess(letter, btn){
+    if(over) return;
+    if(WORD.indexOf(letter) !== -1){
+      guessed[letter] = true;
+      btn.classList.add('is-correct');
+      btn.disabled = true;
+      renderWord();
+      updateReveal();
+      if(isWon()) endGame(true);
+    } else {
+      btn.classList.add('is-wrong');
+      btn.disabled = true;
+      wrong++;
+      renderGallows();
+      if(wrong >= MAX_WRONG) endGame(false);
+    }
+  }
+
+  function buildKeyboard(){
+    keysEl.innerHTML = '';
+    LETTERS.split('').forEach(function(letter){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'key';
+      btn.textContent = letter;
+      btn.addEventListener('click', function(){ guess(letter, btn); });
+      keysEl.appendChild(btn);
+    });
+  }
+
+  function reset(){
+    guessed = {};
+    wrong = 0;
+    over = false;
+    retryBtn.hidden = true;
+    setMessage('');
+    buildKeyboard();
+    renderGallows();
+    renderWord();
+    updateReveal();
+  }
+
+  retryBtn.addEventListener('click', reset);
+  reset();
+})();
+
+/* ---------- CORAZON QUE SE ROMPE ---------- */
+(function(){
+  var overlay  = document.getElementById('heartOverlay');
+  var stage    = document.getElementById('heartStage');
+  var clickBtn = document.getElementById('heartClickBtn');
+  if(!overlay || !stage || !clickBtn) return;
+
+  var HEART_SVG = '<svg class="heart-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+    '<path fill="url(#heartFill)" d="M12,21.35l-1.45-1.32C5.4,15.36,2,12.28,2,8.5C2,5.42,4.42,3,7.5,3c1.74,0,3.41,0.81,4.5,2.09C13.09,3.81,14.76,3,16.5,3C19.58,3,22,5.42,22,8.5c0,3.78-3.4,6.86-8.55,11.54L12,21.35z"/>' +
+    '</svg>';
+
+  var GRID = 8;
+  var busy = false;
+
+  window.revealHeart = function(){
+    var oldShatter = stage.querySelector('.heart-shatter');
+    if(oldShatter) oldShatter.remove();
+    clickBtn.style.display = '';
+    clickBtn.classList.remove('is-popping');
+    clickBtn.disabled = false;
+    busy = false;
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.classList.add('is-active');
+  };
+
+  function shatter(){
+    var size = stage.getBoundingClientRect().width;
+    var tileSize = size / GRID;
+    var cx = size / 2, cy = size / 2;
+    var shatterEl = document.createElement('div');
+    shatterEl.className = 'heart-shatter';
+    var tiles = [];
+
+    for(var r = 0; r < GRID; r++){
+      for(var c = 0; c < GRID; c++){
+        var tile = document.createElement('div');
+        tile.className = 'heart-shatter__tile';
+        tile.style.left = (c * tileSize) + 'px';
+        tile.style.top  = (r * tileSize) + 'px';
+        tile.style.width  = tileSize + 'px';
+        tile.style.height = tileSize + 'px';
+
+        var inner = document.createElement('div');
+        inner.className = 'heart-shatter__inner';
+        inner.style.left = (-c * tileSize) + 'px';
+        inner.style.top  = (-r * tileSize) + 'px';
+        inner.style.width  = size + 'px';
+        inner.style.height = size + 'px';
+        inner.innerHTML = HEART_SVG;
+        tile.appendChild(inner);
+        shatterEl.appendChild(tile);
+
+        var tileCx = c * tileSize + tileSize / 2;
+        var tileCy = r * tileSize + tileSize / 2;
+        var dx = tileCx - cx, dy = tileCy - cy;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        dx = dx / dist + (Math.random() - 0.5) * 0.8;
+        dy = dy / dist + (Math.random() - 0.5) * 0.8 + 0.25;
+
+        tiles.push({
+          el: tile,
+          dx: dx,
+          dy: dy,
+          travel: 160 + Math.random() * 340,
+          rot: (Math.random() - 0.5) * 1440,
+          delay: Math.random() * 160
+        });
+      }
+    }
+
+    stage.appendChild(shatterEl);
+    clickBtn.style.display = 'none';
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        tiles.forEach(function(t){
+          t.el.style.transitionDelay = t.delay + 'ms';
+          t.el.style.transform = 'translate(' + (t.dx * t.travel) + 'px,' + (t.dy * t.travel) + 'px) rotate(' + t.rot + 'deg) scale(.2)';
+          t.el.style.opacity = '0';
+          t.el.style.filter = 'blur(3px)';
+        });
+      });
+    });
+
+    setTimeout(function(){
+      overlay.classList.remove('is-active');
+      overlay.setAttribute('aria-hidden', 'true');
+      if(window.__goToScene) window.__goToScene(2);
+    }, 1450);
+  }
+
+  clickBtn.addEventListener('click', function(){
+    if(busy) return;
+    busy = true;
+    clickBtn.disabled = true;
+
+    /* destello + sacudida en el instante del impacto */
+    var flash = document.createElement('div');
+    flash.className = 'heart-flash burst';
+    stage.appendChild(flash);
+    overlay.classList.add('is-shaking');
+    setTimeout(function(){
+      flash.remove();
+      overlay.classList.remove('is-shaking');
+    }, 550);
+
+    /* pequeno "golpe" de anticipacion antes de estallar */
+    clickBtn.classList.add('is-popping');
+    setTimeout(function(){
+      clickBtn.classList.remove('is-popping');
+      shatter();
+    }, 110);
+  });
 })();
 </script>
 
